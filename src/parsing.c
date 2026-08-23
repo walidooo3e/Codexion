@@ -6,16 +6,16 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 15:53:17 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/22 17:36:53 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/23 01:02:32 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-int	is_digit(char c)
+static int	is_digit(char c)
 {
 	return (c >= '0' && c <= '9');
 }
 
-int	is_valid_number(char *str)
+static int	is_valid_number(char *str)
 {
 	int	i;
 	int	result;
