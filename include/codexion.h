@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:55:50 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/23 01:02:50 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/23 01:50:26 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,12 +58,12 @@ typedef enum e_scheduler
 
 typedef struct s_simulation
 {
-	int				number_of_coders;
+	long				number_of_coders;
 	long			time_to_burnout;
 	long			time_to_compile;
 	long			time_to_debug;
 	long			time_to_refactor;
-	int				number_of_compiles_required;
+	long				number_of_compiles_required;
 	long			dongle_cooldown;
 	t_scheduler		scheduler;
 	t_coder			*coders;
@@ -81,7 +81,7 @@ void	ms_to_timespec(long ms, struct timespec *ts);
 
 /* dongle.c */
 int		dongle_init(t_simulation *sim);
-void	dongle_destroy(t_simulation *sim);
+void	destroy_up_to(t_dongle *dongles, int count);
 void	dongle_acquire(t_dongle *d);
 void	dongle_release(t_dongle *d, long cooldown_ms);
 
