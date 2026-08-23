@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/20 18:30:59 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/22 17:09:42 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/23 01:50:25 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 ** Destroy dongles at the end of a normal run
 ** Or in the case of a failure to initiate all dongles correctly
 */
-static void	destroy_up_to(t_dongle *dongles, int count)
+void	destroy_up_to(t_dongle *dongles, int count)
 {
 	int	i;
 
@@ -75,10 +75,32 @@ int	dongle_init(t_simulation *sim)
 	return (0);
 }
 
-/*
-** Public teardown, called once at the very end of the program.
-*/
-void	dongle_destroy(t_simulation *sim)
+/* acquiring a dongle when it's free to use (not in use or cooldown)*/
+void	dongle_acquire(t_dongle *d)
 {
-	destroy_up_to(sim->dongles, sim->number_of_coders);
+	struct timespec	deadline;
+
+	pthread_mutex_lock(&d->lock);
+	while (d->in_use || get_time_ms() < d->available_at_ms)
+	{
+		if (d->in_use)
+			pthread_cond_wait(&d->cond, &d->lock);
+		else
+		{
+			ms_to_timespec(d->available_at_ms, &deadline);
+			pthread_cond_timedwait(&d->cond, &d->lock, &deadline);
+		}
+	}
+	d->in_use = true;
+	pthread_mutex_unlock(&d->lock);
+}
+
+/* releasing a dongle when a coder is done with it */
+void	dongle_release(t_dongle *d, long cooldown_ms)
+{
+	pthread_mutex_lock(&d->lock);
+	d->in_use = false;
+	d->available_at_ms = get_time_ms() + cooldown_ms;
+	pthread_cond_broadcast(&d->cond);
+	pthread_mutex_unlock(&d->lock);
 }
