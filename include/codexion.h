@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:55:50 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/22 16:58:15 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/23 01:02:50 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 # include <sys/time.h>
 # include <stdbool.h>
 # include <stdlib.h>
+# include <time.h>
+# include <unistd.h>
 
 typedef enum e_coder_state
 {
@@ -75,9 +77,15 @@ typedef struct s_simulation
 
 /* utils.c */
 long	get_time_ms(void);
+void	ms_to_timespec(long ms, struct timespec *ts);
 
 /* dongle.c */
 int		dongle_init(t_simulation *sim);
 void	dongle_destroy(t_simulation *sim);
+void	dongle_acquire(t_dongle *d);
+void	dongle_release(t_dongle *d, long cooldown_ms);
+
+/* parsing.c */
+int		parser(int ac, char **av, t_simulation *sim);
 
 #endif
