@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:55:50 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/23 01:50:26 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/24 20:22:57 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,12 +58,12 @@ typedef enum e_scheduler
 
 typedef struct s_simulation
 {
-	long				number_of_coders;
+	long			number_of_coders;
 	long			time_to_burnout;
 	long			time_to_compile;
 	long			time_to_debug;
 	long			time_to_refactor;
-	long				number_of_compiles_required;
+	long			number_of_compiles_required;
 	long			dongle_cooldown;
 	t_scheduler		scheduler;
 	t_coder			*coders;
