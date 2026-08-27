@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:55:50 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/24 20:22:57 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/27 02:19:52 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 # include <stdlib.h>
 # include <time.h>
 # include <unistd.h>
+# include <stdio.h>
+# include <string.h>
 
 typedef enum e_coder_state
 {
@@ -70,6 +72,7 @@ typedef struct s_simulation
 	t_dongle		*dongles;
 	pthread_mutex_t	log_lock;
 	pthread_mutex_t	stop_lock;
+	pthread_mutex_t	state_lock;
 	bool			stop;
 	long			start_time_ms;
 	pthread_t		monitor_thread;
@@ -78,14 +81,18 @@ typedef struct s_simulation
 /* utils.c */
 long	get_time_ms(void);
 void	ms_to_timespec(long ms, struct timespec *ts);
+bool	sim_is_stopped(t_simulation *sim);
 
 /* dongle.c */
 int		dongle_init(t_simulation *sim);
 void	destroy_up_to(t_dongle *dongles, int count);
-void	dongle_acquire(t_dongle *d);
+bool	dongle_acquire(t_dongle *d, t_simulation *sim);
 void	dongle_release(t_dongle *d, long cooldown_ms);
 
 /* parsing.c */
 int		parser(int ac, char **av, t_simulation *sim);
+
+/* logger.c */
+void	log_state(t_simulation *sim, int coder_id, char *msg);
 
 #endif
