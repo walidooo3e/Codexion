@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/20 18:30:59 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/23 01:50:25 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/27 01:16:13 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,12 +76,13 @@ int	dongle_init(t_simulation *sim)
 }
 
 /* acquiring a dongle when it's free to use (not in use or cooldown)*/
-void	dongle_acquire(t_dongle *d)
+bool	dongle_acquire(t_dongle *d, t_simulation *sim)
 {
 	struct timespec	deadline;
 
 	pthread_mutex_lock(&d->lock);
-	while (d->in_use || get_time_ms() < d->available_at_ms)
+	while (!sim_is_stopped(sim)
+		&& (d->in_use || get_time_ms() < d->available_at_ms))
 	{
 		if (d->in_use)
 			pthread_cond_wait(&d->cond, &d->lock);
@@ -91,8 +92,14 @@ void	dongle_acquire(t_dongle *d)
 			pthread_cond_timedwait(&d->cond, &d->lock, &deadline);
 		}
 	}
+	if (sim_is_stopped(sim))
+	{
+		pthread_mutex_unlock(&d->lock);
+		return (false);
+	}
 	d->in_use = true;
 	pthread_mutex_unlock(&d->lock);
+	return (true);
 }
 
 /* releasing a dongle when a coder is done with it */
