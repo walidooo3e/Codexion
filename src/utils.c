@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/23 00:55:38 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/27 23:43:16 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/29 05:47:18 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,4 +36,21 @@ bool	sim_is_stopped(t_simulation *sim)
 	value = sim->stop;
 	pthread_mutex_unlock(&sim->stop_lock);
 	return (value);
+}
+
+void	sim_request_stop(t_simulation *sim)
+{
+	int	i;
+
+	pthread_mutex_lock(&sim->stop_lock);
+	sim->stop = true;
+	pthread_mutex_unlock(&sim->stop_lock);
+	i = 0;
+	while (i < sim->number_of_coders)
+	{
+		pthread_mutex_lock(&sim->dongles[i].lock);
+		pthread_cond_broadcast(&sim->dongles[i].cond);
+		pthread_mutex_unlock(&sim->dongles[i].lock);
+		i++;
+	}
 }
