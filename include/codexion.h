@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:55:50 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/27 02:19:52 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/08/30 04:55:51 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ typedef struct s_simulation
 long	get_time_ms(void);
 void	ms_to_timespec(long ms, struct timespec *ts);
 bool	sim_is_stopped(t_simulation *sim);
+void	sim_request_stop(t_simulation *sim);
 
 /* dongle.c */
 int		dongle_init(t_simulation *sim);
@@ -94,5 +95,11 @@ int		parser(int ac, char **av, t_simulation *sim);
 
 /* logger.c */
 void	log_state(t_simulation *sim, int coder_id, char *msg);
+
+/* monitor.c */
+void	*monitor_routine(void *arg);
+
+/* coder.c */
+void	*coder_routine(void *arg);
 
 #endif
