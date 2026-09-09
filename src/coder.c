@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/27 01:19:54 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/27 23:42:37 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/09/09 01:40:28 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,10 @@
 
 static bool	acquire_pair(t_coder *c, t_dongle *first, t_dongle *second)
 {
-	if (!dongle_acquire(first, c->sim))
+	if (!dongle_acquire(first, c))
 		return (false);
 	log_state(c->sim, c->id, "has taken a dongle");
-	if (!dongle_acquire(second, c->sim))
+	if (!dongle_acquire(second, c))
 	{
 		dongle_release(first, c->sim->dongle_cooldown);
 		return (false);
@@ -49,9 +49,11 @@ static void	coder_compile(t_coder *c)
 	c->last_compile_start_ms = get_time_ms();
 	pthread_mutex_unlock(&sim->state_lock);
 	log_state(c->sim, c->id, "is compiling");
-	usleep(c->sim->time_to_compile * 1000);
+	sim_sleep_ms(sim, sim->time_to_compile);
 	dongle_release(c->left, sim->dongle_cooldown);
 	dongle_release(c->right, sim->dongle_cooldown);
+	if (sim_is_stopped(sim))
+		return ;
 	pthread_mutex_lock(&sim->state_lock);
 	c->compiles_done++;
 	pthread_mutex_unlock(&sim->state_lock);
@@ -66,12 +68,14 @@ static void	coder_debug_refactor(t_coder *c)
 	c->state = DEBUGGING;
 	pthread_mutex_unlock(&sim->state_lock);
 	log_state(c->sim, c->id, "is debugging");
-	usleep(sim->time_to_debug * 1000);
+	sim_sleep_ms(sim, sim->time_to_debug);
+	if (sim_is_stopped(sim))
+		return ;
 	pthread_mutex_lock(&sim->state_lock);
 	c->state = REFACTORING;
 	pthread_mutex_unlock(&sim->state_lock);
 	log_state(c->sim, c->id, "is refactoring");
-	usleep(sim->time_to_refactor * 1000);
+	sim_sleep_ms(sim, sim->time_to_refactor);
 }
 
 void	*coder_routine(void *arg)
@@ -89,6 +93,8 @@ void	*coder_routine(void *arg)
 		if (coder_acquire_both(c))
 		{
 			coder_compile(c);
+			if (sim_is_stopped(sim))
+				break ;
 			coder_debug_refactor(c);
 		}
 		else
