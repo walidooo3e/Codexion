@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/28 00:26:45 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/29 16:50:47 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/09/09 01:41:19 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,14 @@
 
 static bool	monitor_check_burnout(t_simulation *sim)
 {
-    int			i;
-	long		now;
-	long		deadline;
+	int		i;
+	long	now;
+	long	deadline;
 
 	i = 0;
 	now = 0;
 	deadline = 0;
-	while (i < sim-> number_of_coders)
+	while (i < sim->number_of_coders)
 	{
 		now = get_time_ms();
 		pthread_mutex_lock(&sim->state_lock);
@@ -32,13 +32,12 @@ static bool	monitor_check_burnout(t_simulation *sim)
 			pthread_mutex_unlock(&sim->state_lock);
 			log_state(sim, sim->coders[i].id, "burned out");
 			sim_request_stop(sim);
-			return true;
+			return (true);
 		}
 		pthread_mutex_unlock(&sim->state_lock);
-
 		i++;
 	}
-	return false;
+	return (false);
 }
 
 static bool	monitor_check_success(t_simulation *sim)
@@ -64,14 +63,14 @@ static bool	monitor_check_success(t_simulation *sim)
 void	*monitor_routine(void *arg)
 {
 	t_simulation	*sim;
-	
+
 	sim = (t_simulation *)arg;
-	while(!sim_is_stopped(sim))
+	while (!sim_is_stopped(sim))
 	{
 		if (monitor_check_burnout(sim))
-			break;
+			break ;
 		else if (monitor_check_success(sim))
-			break;
+			break ;
 		usleep(1000);
 	}
 	return (NULL);

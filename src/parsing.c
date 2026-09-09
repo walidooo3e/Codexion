@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 15:53:17 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/27 01:16:34 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/09/09 02:07:01 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,19 +17,22 @@ static int	is_digit(char c)
 	return (c >= '0' && c <= '9');
 }
 
-static int	is_valid_number(char *str)
+static long	is_valid_number(char *str)
 {
-	int	i;
-	int	result;
+	long	i;
+	long	result;
 
+	if (!str[0])
+		return (-1);
 	i = 0;
 	result = 0;
 	while (str[i])
 	{
-		if (is_digit(str[i]))
-			result = result * 10 + (str[i] - '0');
-		else
+		if (!is_digit(str[i]))
 			return (-1);
+		if (result > (LONG_MAX - (str[i] - '0')) / 10)
+			return (-1);
+		result = result * 10 + (str[i] - '0');
 		i++;
 	}
 	return (result);
@@ -48,9 +51,9 @@ static void	build_targets(t_simulation *sim, long *targets[7])
 
 int	parser(int ac, char **av, t_simulation *sim)
 {
-	int		i;
-	int		to_parse;
-	long	*targets[7];
+	int			i;
+	long		to_parse;
+	long		*targets[7];
 
 	if (ac != 9)
 		return (0);
@@ -59,7 +62,7 @@ int	parser(int ac, char **av, t_simulation *sim)
 	while (i <= 7)
 	{
 		to_parse = is_valid_number(av[i]);
-		if (to_parse == -1)
+		if (to_parse == -1 || (to_parse == 0 && (i - 1) != 6))
 			return (0);
 		*targets[i - 1] = to_parse;
 		i++;

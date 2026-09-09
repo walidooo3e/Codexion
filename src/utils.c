@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/23 00:55:38 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/29 05:47:18 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/09/09 01:41:46 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,5 +52,21 @@ void	sim_request_stop(t_simulation *sim)
 		pthread_cond_broadcast(&sim->dongles[i].cond);
 		pthread_mutex_unlock(&sim->dongles[i].lock);
 		i++;
+	}
+}
+
+void	sim_sleep_ms(t_simulation *sim, long ms)
+{
+	long	remaining;
+	long	chunk;
+
+	remaining = ms;
+	while (remaining > 0 && !sim_is_stopped(sim))
+	{
+		chunk = remaining;
+		if (chunk > 1)
+			chunk = 1;
+		usleep(chunk * 1000);
+		remaining -= chunk;
 	}
 }
