@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/06 22:22:04 by wabdi             #+#    #+#             */
-/*   Updated: 2026/09/09 02:13:06 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/09/09 04:27:31 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,6 @@
 
 long	fifo_next_key(t_dongle *d)
 {
-	d->arrival_counter--;
+	d->arrival_counter++;
 	return (d->arrival_counter);
 }
