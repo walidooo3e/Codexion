@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/20 18:30:59 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/27 01:16:13 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/09/09 01:58:13 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,26 +25,37 @@ void	destroy_up_to(t_dongle *dongles, int count)
 	{
 		pthread_mutex_destroy(&dongles[i].lock);
 		pthread_cond_destroy(&dongles[i].cond);
+		if (dongles[i].heap)
+		{
+			free(dongles[i].heap->data);
+			free(dongles[i].heap);
+		}
 		i++;
 	}
 	free(dongles);
 }
 
-/*
-** I Hate Norminette
-*/
-static int	init_single_dongle(t_dongle *dongle, int id, long now)
+static int	init_dongle_internals(t_dongle *d, long cap)
 {
-	dongle->id = id;
-	dongle->in_use = false;
-	dongle->available_at_ms = now;
-	if (pthread_mutex_init(&dongle->lock, NULL) != 0)
+	d->heap = malloc(sizeof(t_heap));
+	if (!d->heap)
 		return (-1);
-	if (pthread_cond_init(&dongle->cond, NULL) != 0)
+	d->heap->data = malloc(sizeof(t_wait_entry) * cap);
+	if (!d->heap->data || pthread_mutex_init(&d->lock, NULL) != 0)
 	{
-		pthread_mutex_destroy(&dongle->lock);
+		free(d->heap->data);
+		free(d->heap);
 		return (-1);
 	}
+	if (pthread_cond_init(&d->cond, NULL) != 0)
+	{
+		pthread_mutex_destroy(&d->lock);
+		free(d->heap->data);
+		free(d->heap);
+		return (-1);
+	}
+	d->heap->size = 0;
+	d->heap->capacity = (int)cap;
 	return (0);
 }
 
@@ -65,7 +76,12 @@ int	dongle_init(t_simulation *sim)
 	i = 0;
 	while (i < sim->number_of_coders)
 	{
-		if (init_single_dongle(&sim->dongles[i], i, now) != 0)
+		sim->dongles[i].id = i;
+		sim->dongles[i].in_use = false;
+		sim->dongles[i].available_at_ms = now;
+		sim->dongles[i].arrival_counter = 0;
+		if (init_dongle_internals(&sim->dongles[i],
+				sim->number_of_coders) != 0)
 		{
 			destroy_up_to(sim->dongles, i);
 			return (-1);
@@ -76,30 +92,32 @@ int	dongle_init(t_simulation *sim)
 }
 
 /* acquiring a dongle when it's free to use (not in use or cooldown)*/
-bool	dongle_acquire(t_dongle *d, t_simulation *sim)
+bool	dongle_acquire(t_dongle *d, t_coder *c)
 {
+	long			key;
 	struct timespec	deadline;
 
 	pthread_mutex_lock(&d->lock);
-	while (!sim_is_stopped(sim)
-		&& (d->in_use || get_time_ms() < d->available_at_ms))
+	key = edf_next_key(c);
+	if (c->sim->scheduler == SCHEDULER_FIFO)
+		key = fifo_next_key(d);
+	heap_push(d->heap, c->id, key);
+	while (!sim_is_stopped(c->sim) && (d->in_use || get_time_ms()
+			< d->available_at_ms || heap_peek_front_id(d->heap) != c->id))
 	{
-		if (d->in_use)
-			pthread_cond_wait(&d->cond, &d->lock);
-		else
+		if (!d->in_use && get_time_ms() < d->available_at_ms)
 		{
 			ms_to_timespec(d->available_at_ms, &deadline);
 			pthread_cond_timedwait(&d->cond, &d->lock, &deadline);
 		}
+		else
+			pthread_cond_wait(&d->cond, &d->lock);
 	}
-	if (sim_is_stopped(sim))
-	{
-		pthread_mutex_unlock(&d->lock);
-		return (false);
-	}
-	d->in_use = true;
+	heap_remove_by_id(d->heap, c->id);
+	if (!sim_is_stopped(c->sim))
+		d->in_use = true;
 	pthread_mutex_unlock(&d->lock);
-	return (true);
+	return (!sim_is_stopped(c->sim));
 }
 
 /* releasing a dongle when a coder is done with it */
