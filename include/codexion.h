@@ -6,7 +6,7 @@
 /*   By: wabdi <wabdi@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/22 16:55:50 by wabdi             #+#    #+#             */
-/*   Updated: 2026/08/30 04:55:51 by wabdi            ###   ########.fr       */
+/*   Updated: 2026/09/09 01:33:38 by wabdi            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,20 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <string.h>
+# include <limits.h>
+
+typedef struct s_wait_entry
+{
+	int		coder_id;
+	long	key;
+}	t_wait_entry;
+
+typedef struct s_heap
+{
+	t_wait_entry	*data;
+	int				size;
+	int				capacity;
+}	t_heap;
 
 typedef enum e_coder_state
 {
@@ -36,6 +50,8 @@ typedef struct s_dongle
 	int				id;
 	bool			in_use;
 	long			available_at_ms;
+	long			arrival_counter;
+	t_heap			*heap;
 	pthread_mutex_t	lock;
 	pthread_cond_t	cond;
 }	t_dongle;
@@ -83,11 +99,12 @@ long	get_time_ms(void);
 void	ms_to_timespec(long ms, struct timespec *ts);
 bool	sim_is_stopped(t_simulation *sim);
 void	sim_request_stop(t_simulation *sim);
+void	sim_sleep_ms(t_simulation *sim, long ms);
 
 /* dongle.c */
 int		dongle_init(t_simulation *sim);
 void	destroy_up_to(t_dongle *dongles, int count);
-bool	dongle_acquire(t_dongle *d, t_simulation *sim);
+bool	dongle_acquire(t_dongle *d, t_coder *c);
 void	dongle_release(t_dongle *d, long cooldown_ms);
 
 /* parsing.c */
@@ -101,5 +118,16 @@ void	*monitor_routine(void *arg);
 
 /* coder.c */
 void	*coder_routine(void *arg);
+
+/* heap.c */
+int		heap_push(t_heap *h, int coder_id, long key);
+int		heap_peek_front_id(t_heap *h);
+void	heap_remove_by_id(t_heap *h, int coder_id);
+
+/* scheduler_fifo.c */
+long	fifo_next_key(t_dongle *d);
+
+/* scheduler_edf.c */
+long	edf_next_key(t_coder *c);
 
 #endif
