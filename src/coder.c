@@ -16,12 +16,12 @@ static bool	acquire_pair(t_coder *c, t_dongle *first, t_dongle *second)
 {
 	if (!dongle_acquire(first, c))
 		return (false);
-	log_state(c->sim, c->id, "has taken a dongle");
 	if (!dongle_acquire(second, c))
 	{
 		dongle_release(first, c->sim->dongle_cooldown);
 		return (false);
 	}
+	log_state(c->sim, c->id, "has taken a dongle");
 	log_state(c->sim, c->id, "has taken a dongle");
 	return (true);
 }
